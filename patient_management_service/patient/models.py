@@ -20,6 +20,5 @@ class Patient(models.Model):
     date_of_birth = models.DateField()
     gender = models.CharField(max_length=10)
     phone_number = models.CharField(max_length=15)
-
     def __str__(self):
         return f'{self.fullname}, {self.address}'
