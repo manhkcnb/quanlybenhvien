@@ -8,19 +8,23 @@ from .serializers import MedicalRecordSerializer
 
 PATIENT_SERVICE_URL = 'http://127.0.0.1:8006/api/patients/'
 DOCTOR_SERVICE_URL = 'http://127.0.0.1:8003/api/doctors/'
+MEDICINE_SERVICE_URL = 'http://127.0.0.1:8005/api/medicine/'
 
 class MedicalRecordViewSet(viewsets.ModelViewSet):
     queryset = MedicalRecord.objects.all()
     serializer_class = MedicalRecordSerializer
 
     def get_patient_info(self, patient_id):
-        response = requests.get(f'{PATIENT_SERVICE_URL}{patient_id}')
-        if response.status_code == 200:
-            return response.json()
-        return {}
+        return self.get_api_data(PATIENT_SERVICE_URL, patient_id)
 
     def get_doctor_info(self, doctor_id):
-        response = requests.get(f'{DOCTOR_SERVICE_URL}{doctor_id}')
+        return self.get_api_data(DOCTOR_SERVICE_URL, doctor_id)
+
+    def get_medicine_name(self, medicine_id):
+        return self.get_api_data(MEDICINE_SERVICE_URL, medicine_id)
+
+    def get_api_data(self, url, resource_id):
+        response = requests.get(f'{url}{resource_id}')
         if response.status_code == 200:
             return response.json()
         return {}
@@ -39,14 +43,12 @@ class MedicalRecordViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def patients_list(self, request):
-        response = requests.get(PATIENT_SERVICE_URL)
-        if response.status_code == 200:
-            return Response(response.json())
-        return Response(status=response.status_code)
+        return self.get_api_data(PATIENT_SERVICE_URL, '')
 
     @action(detail=False, methods=['get'])
     def doctors_list(self, request):
-        response = requests.get(DOCTOR_SERVICE_URL)
-        if response.status_code == 200:
-            return Response(response.json())
-        return Response(status=response.status_code)
+        return self.get_api_data(DOCTOR_SERVICE_URL, '')
+
+    @action(detail=False, methods=['get'])
+    def medicines_list(self, request):
+        return self.get_api_data(MEDICINE_SERVICE_URL, '')
