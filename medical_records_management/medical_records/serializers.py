@@ -34,15 +34,7 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
                 medications_info.append(medication_info)
         return medications_info
 
-    def _get_api_data(self, url):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching data from {url}: {e}")
-            return {}
-
+    
     def _get_medication_info(self, medication_id):
         try:
             response = requests.get(f'http://127.0.0.1:8005/api/medicine/{medication_id}')
