@@ -23,15 +23,10 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
     medications_info = serializers.SerializerMethodField()
     treatments = TreatmentSerializer(many=True, read_only=True)
     medications = MedicationSerializer(many=True, read_only=True)
-    medical_history = MedicalHistorySerializer(read_only=True)
 
     class Meta:
         model = MedicalRecord
-        fields = [
-            'id', 'patient_id', 'patient_info', 'doctor_id', 'doctor_info', 
-            'visit_date', 'diagnosis', 'treatments', 'medications', 'notes', 
-            'medications_info', 'medical_history'
-        ]
+        fields = ['id', 'patient_id', 'patient_info', 'doctor_id', 'doctor_info', 'visit_date', 'diagnosis', 'treatments', 'medications', 'notes', 'medications_info']
         read_only_fields = ['id', 'medications_info']
 
     def get_patient_info(self, obj):
@@ -60,23 +55,18 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
             return {}
 
     def create(self, validated_data):
-        treatments_data = validated_data.pop('treatments')
+        treatments_data = validated_data.pop('treatments', None)
         medical_record = MedicalRecord.objects.create(**validated_data)
         
-        for treatment_data in treatments_data:
-            Treatment.objects.create(medical_record=medical_record, **treatment_data)
+        # Nếu có dữ liệu treatments, thêm chúng vào MedicalRecord
+        if treatments_data:
+            for treatment_data in treatments_data:
+                Treatment.objects.create(medical_record=medical_record, **treatment_data)
         
         return medical_record
 
     def update(self, instance, validated_data):
-        treatments_data = validated_data.pop('treatments')
-        
-        # Update treatments
-        instance.treatments.all().delete()  # Delete existing treatments
-        for treatment_data in treatments_data:
-            Treatment.objects.create(medical_record=instance, **treatment_data)
-        
-        # Update other fields of MedicalRecord
+        treatments_data = validated_data.pop('treatments', None)
         instance.patient_id = validated_data.get('patient_id', instance.patient_id)
         instance.doctor_id = validated_data.get('doctor_id', instance.doctor_id)
         instance.appointment_id = validated_data.get('appointment_id', instance.appointment_id)
@@ -84,5 +74,11 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
         instance.diagnosis = validated_data.get('diagnosis', instance.diagnosis)
         instance.notes = validated_data.get('notes', instance.notes)
         instance.save()
-
+        
+        # Nếu có dữ liệu treatments, cập nhật chúng
+        if treatments_data:
+            instance.treatments.clear()
+            for treatment_data in treatments_data:
+                Treatment.objects.create(medical_record=instance, **treatment_data)
+        
         return instance

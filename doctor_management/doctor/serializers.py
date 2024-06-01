@@ -30,7 +30,9 @@ class DoctorSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
     fullname = FullNameSerializer()
     account = AccountSerializer()
-    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
+    department = serializers.SlugRelatedField(slug_field='department_name', queryset=Department.objects.all())
+
+
 
     class Meta:
         model = Doctor
@@ -40,13 +42,12 @@ class DoctorSerializer(serializers.ModelSerializer):
         fullname_data = validated_data.pop('fullname')
         address_data = validated_data.pop('address')
         account_data = validated_data.pop('account')
-        department_id = validated_data.pop('department')  # Extract department_id
+        department_name = validated_data.pop('department')
 
         name_instance = FullName.objects.create(**fullname_data)
         address_instance = Address.objects.create(**address_data)
         account_instance = Account.objects.create(**account_data)
         
-        # Create Doctor instance with department_id instead of department_instance
         doctor_instance = Doctor.objects.create(fullname=name_instance, address=address_instance, account=account_instance, department_id=department_id, **validated_data)
         return doctor_instance
 
@@ -54,7 +55,7 @@ class DoctorSerializer(serializers.ModelSerializer):
         fullname_data = validated_data.pop('fullname')
         address_data = validated_data.pop('address')
         account_data = validated_data.pop('account')
-        department_id = validated_data.pop('department')  # Extract department_id
+        department_id = validated_data.pop('department')
 
         # Update FullName instance
         instance.fullname.first_name = fullname_data.get('first_name', instance.fullname.first_name)
@@ -68,10 +69,10 @@ class DoctorSerializer(serializers.ModelSerializer):
 
         # Update Account instance
         instance.account.username = account_data.get('username', instance.account.username)
-        instance.account.password = account_data.get('password', instance.account.password)  # Cần mã hóa mật khẩu trước khi lưu
+        instance.account.password = account_data.get('password', instance.account.password)
         instance.account.save()
 
-        # Update Department instance (department_id)
+        # Update Department instance
         instance.department_id = department_id
         instance.save()
 
@@ -86,9 +87,3 @@ class DoctorSerializer(serializers.ModelSerializer):
         instance.save()
 
         return instance
-
-    def delete(self, instance):
-        instance.fullname.delete()
-        instance.address.delete()
-        instance.account.delete()
-        instance.delete()
