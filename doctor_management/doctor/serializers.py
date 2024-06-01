@@ -26,11 +26,15 @@ class DepartmentCreateSerializer(serializers.ModelSerializer):
         model = Department
         fields = '__all__'
 
+class DepartmentNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['department_name', 'id']
 class DoctorSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
     fullname = FullNameSerializer()
     account = AccountSerializer()
-    department = serializers.SlugRelatedField(slug_field='department_name', queryset=Department.objects.all())
+    department = serializers.PrimaryKeyRelatedField(queryset=Department.objects.all())
 
 
 
@@ -42,12 +46,12 @@ class DoctorSerializer(serializers.ModelSerializer):
         fullname_data = validated_data.pop('fullname')
         address_data = validated_data.pop('address')
         account_data = validated_data.pop('account')
-        department_name = validated_data.pop('department')
+        department_data = validated_data.pop('department')
 
         name_instance = FullName.objects.create(**fullname_data)
         address_instance = Address.objects.create(**address_data)
         account_instance = Account.objects.create(**account_data)
-        
+        department_id = department_data.id
         doctor_instance = Doctor.objects.create(fullname=name_instance, address=address_instance, account=account_instance, department_id=department_id, **validated_data)
         return doctor_instance
 
